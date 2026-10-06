@@ -9,11 +9,15 @@
       "source": "./plugins/threads"
     },
     {
+      "name": "threads-bg",
+      "source": "./plugins/threads-bg"
+    },
+    {
       "name": "codex-computer-use",
       "source": "./plugins/codex-computer-use"
     }
   ],
   "metadata": {
-    "description": "Computer Use and Threads: two Claude Code mods with build prompts and setup guides."
+    "description": "Computer Use and Threads: two Claude Code mods with build prompts and setup guides. Threads comes in two backends: tmux (macOS/Linux) and claude --bg (Windows too)."
   }
 }

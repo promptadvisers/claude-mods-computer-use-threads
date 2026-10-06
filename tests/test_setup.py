@@ -15,8 +15,13 @@ class SetupTests(unittest.TestCase):
    self.assertEqual(list(dest.iterdir()),[dest/'keep'])
  def test_paths_with_spaces_are_single_arguments(self):
   cs=setup.commands(Path('/test/a folder'),Path('/home/a user'),'both')
-  self.assertIn('/test/a folder',cs[0]);self.assertIn('/home/a user/.claude/mcp/codex-cu/launch.mjs',cs[1])
+  self.assertIn(str(Path('/test/a folder')),cs[0]);self.assertIn(str(Path('/home/a user/.claude/mcp/codex-cu/launch.mjs')),cs[1])
  def test_threads_only_has_no_computer_registration(self):
   cs=setup.commands(Path('/test'),Path('/home/tester'),'threads')
   self.assertEqual(len(cs),2);self.assertFalse(any('mcp' in c for c in cs))
+ def test_threads_bg_installs_only_its_plugin(self):
+  cs=setup.commands(Path('/test'),Path('/home/tester'),'threads-bg')
+  self.assertEqual(len(cs),2);self.assertIn('threads-bg@two-mods',cs[1]);self.assertNotIn('threads@two-mods',cs[1])
+  both=setup.commands(Path('/test'),Path('/home/tester'),'both')
+  self.assertFalse(any('threads-bg@two-mods' in c for c in both))
 if __name__=='__main__':unittest.main()

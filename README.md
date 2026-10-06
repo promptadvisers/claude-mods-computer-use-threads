@@ -30,6 +30,7 @@ This is an **unofficial, experimental integration**, captured on **5 October 202
 - **Both mods:** Claude Code with working mod support. Local tests were run with CLI **2.1.289**.
 - **Computer Use:** macOS, the ChatGPT Mac app at its expected installation path, and Codex computer use already set up locally. The proprietary computer-use runtime is **not included**.
 - **Threads:** `tmux`, a signed-in Claude terminal session and a trusted working folder. Desktop sidebar access depends on Remote Control availability for your account.
+- **Threads (claude --bg), Windows included:** the `threads-bg` plugin is the same mod on Claude Code's own background sessions (`claude --bg`) instead of tmux. It needs a CLI with the `--bg` flag, a signed-in terminal session and a trusted folder; no tmux, no WSL. Install one of the two, not both (they share the `/threads` command and the registry). See [plugins/threads-bg/README.md](plugins/threads-bg/README.md).
 - **Setup helper:** Python 3. The computer-use bridge uses the Node runtime shipped inside the ChatGPT app.
 
 No extra API key is required by this code. Your existing account access, usage limits and provider terms still apply. The cost shown by Threads is an **API-equivalent estimate**, not your bill.
@@ -65,6 +66,7 @@ Then use the [exact Calculator → TextEdit prompt](prompts/computer-use-demo.tx
 plugins/
   codex-computer-use/     The routing tool, commands and approval panel
   threads/               The lead chat, sessions, panel, plans and tests
+  threads-bg/            The same mod on claude --bg instead of tmux (Windows, macOS, Linux)
 bridge/
   launch.mjs             Starts the installed Codex computer-use server
   daemon.mjs             Keeps connections open and handles app approvals
@@ -127,6 +129,7 @@ The final video transcript records a working Calculator/TextEdit demo and Thread
 
 ```bash
 claude plugin test plugins/threads
+claude plugin test plugins/threads-bg
 claude plugin test plugins/codex-computer-use
 python3 -m unittest discover -s tests
 node --test tests/bridge.test.mjs
@@ -140,6 +143,6 @@ There is no standalone `npm install` step for the mod API. It is supplied by the
 - Desktop app behavior varies. The Calculator/TextEdit demo avoids canvas dragging.
 - Two helpers can use different apps; the bridge prevents simultaneous ownership of the same app while its lease is active.
 - Separate project copies prevent simultaneous file edits, but merging can still produce conflicts.
-- Sidebar visibility and native chat tools depend on your installed app and account. The optional native-threads recipe is distinct from the automatic CLI/tmux backend.
+- Sidebar visibility and native chat tools depend on your installed app and account. The optional native-threads recipe is distinct from the automatic CLI/tmux backend. `threads-bg` has no tmux and cannot type into a helper's prompt or press its permission keys; a helper that stops on a prompt is answered with `claude attach <id>`.
 
 Built with Claude Code; packaged and documented with Codex. Source is provided under the [MIT License](LICENSE). Claude, Codex and ChatGPT belong to their respective providers. This repository is not affiliated with or endorsed by Anthropic or OpenAI.

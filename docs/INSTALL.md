@@ -8,6 +8,8 @@ The installed mod API must support `claude-code`, hook modules and `claude plugi
 
 For Threads, install tmux if needed (`brew install tmux` on a Homebrew Mac), then run `claude auth login`. Open Claude Code in the project folder once and accept its normal folder-trust prompt. Remote Control/sidebar support also needs to be available to your account.
 
+For Threads on `claude --bg` (`threads-bg`, the only option on Windows): no tmux. Check that `claude --help` lists `--bg`, run `claude auth login`, and accept the folder-trust prompt once as above. Use `--component threads-bg` with the setup helper, or `claude plugin install threads-bg@two-mods` after adding the marketplace. Do not install `threads` and `threads-bg` together.
+
 For Computer Use, set up Codex computer use in the ChatGPT Mac app first. Expected locations:
 
 - `/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node`
@@ -58,6 +60,7 @@ Keep source changes in this local repository. Bump the relevant plugin version i
 
 ```bash
 claude plugin update threads@two-mods
+claude plugin update threads-bg@two-mods
 claude plugin update codex-computer-use@two-mods
 ```
 
@@ -69,6 +72,7 @@ Finish or close helper sessions from the Threads panel first. In Claude, switch 
 
 ```bash
 claude plugin uninstall threads@two-mods
+claude plugin uninstall threads-bg@two-mods
 claude plugin uninstall codex-computer-use@two-mods
 claude mcp remove codex-cu --scope user
 ```
