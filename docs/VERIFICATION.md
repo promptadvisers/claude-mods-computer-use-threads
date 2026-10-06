@@ -5,6 +5,8 @@ Snapshot date: 5 October 2026. Local runner: Claude Code 2.1.289, macOS.
 | Check | Result | What it proves |
 | :--- | :--- | :--- |
 | Threads mod tests | 102 passed | Simulated engine behavior for sessions, reports, plans, worktrees, pane and controls |
+| Threads (claude --bg) mod tests | 92 passed (6 October 2026, Windows 11, Claude Code 2.1.289) | Same simulated engine with a `claude --bg` stub, in a POSIX and a Windows world; plus `node tests/core-check.mjs` (31 pure checks) |
+| Threads (claude --bg) live run | One Haiku helper on Windows: started, steered, answered, reported once | Not a full replay: two helpers, a gated plan and a worktree helper were not run live |
 | Computer Use mod tests | 7 passed | Simulated routing, approval panel, caller identity and lifecycle behavior |
 | Setup tests | 4 passed | Empty approvals, existing-file protection, spaces in paths and component selection |
 | Bridge integration tests | 3 passed | Actual daemon against a fake MCP child: session state, reset, approvals, app leases and release |
@@ -19,8 +21,10 @@ Run the checks yourself:
 ```bash
 claude plugin validate .
 claude plugin validate plugins/threads
+claude plugin validate plugins/threads-bg
 claude plugin validate plugins/codex-computer-use
 claude plugin test plugins/threads
+claude plugin test plugins/threads-bg
 claude plugin test plugins/codex-computer-use
 python3 -m unittest discover -s tests
 node --test tests/bridge.test.mjs

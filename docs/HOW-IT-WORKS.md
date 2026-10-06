@@ -19,7 +19,7 @@ The first app request may ask you to allow the app for this session, always, or 
 A helper here means a real Claude Code session with a job, a model and its own conversation. It is different from the background connection helper described above.
 
 - **Start:** the mod runs Claude’s terminal command with a model, title and task.
-- **Keep running:** `tmux` holds the terminal session in the background, without a new visible terminal window.
+- **Keep running:** `tmux` holds the terminal session in the background, without a new visible terminal window. In `threads-bg`, Claude Code's own `claude --bg` does this instead, which is why that variant also runs on Windows.
 - **Watch:** the mod checks the session’s progress records and terminal state.
 - **Steer:** the lead sends a message to the helper. When needed, it can type into that background terminal.
 - **Collect:** the finished answer returns to the lead chat and appears in the panel.

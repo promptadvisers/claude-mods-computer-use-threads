@@ -1,0 +1,31 @@
+{
+  "name": "threads-bg",
+  "version": "0.6.1",
+  "description": "A lead chat creates real Claude Code background sessions (claude --bg) on chosen models, watches them live and steers them. Port of Prompt Advisers' threads 0.5.3 from tmux to claude --bg; runs on Windows.",
+  "author": {
+    "name": "Prompt Advisers (threads 0.5.3); Valerii Yerokhin, TheDrobot (claude --bg port)"
+  },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "defaultPermissionMode": {
+      "type": "string",
+      "title": "Default permission mode",
+      "description": "Permission mode for new session threads and plan phases unless one sets its own. lead = this chat's own mode (messages between the two are never held). /threads mode overrides this for the install.",
+      "default": "lead",
+      "options": [
+        "lead",
+        "bypassPermissions",
+        "default",
+        "acceptEdits",
+        "plan",
+        "auto"
+      ]
+    },
+    "idleCloseMinutes": {
+      "type": "number",
+      "title": "Close idle threads after (minutes)",
+      "description": "Finished session threads of this chat that stay idle this long are closed (transcript kept). Working, waiting and pinned threads are never closed. 0 turns it off.",
+      "default": 120
+    }
+  }
+}

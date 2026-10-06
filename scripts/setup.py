@@ -15,6 +15,8 @@ def commands(root, home, component):
                 ['claude', 'plugin', 'install', 'codex-computer-use@two-mods', '--scope', 'user']]
     if component in ('both', 'threads'):
         out += [['claude', 'plugin', 'install', 'threads@two-mods', '--scope', 'user']]
+    if component == 'threads-bg':
+        out += [['claude', 'plugin', 'install', 'threads-bg@two-mods', '--scope', 'user']]
     return out
 
 def check(home, component):
@@ -24,8 +26,11 @@ def check(home, component):
     result = run(['claude', 'plugin', '--help'])
     if result.returncode or 'test' not in result.stdout:
         errors.append('This Claude CLI does not expose the mod testing command. Check your mod-enabled version.')
-    if component in ('both', 'threads'):
-        if not shutil.which('tmux'): errors.append('tmux is missing. On a Homebrew Mac: brew install tmux')
+    if component in ('both', 'threads', 'threads-bg'):
+        if component != 'threads-bg' and not shutil.which('tmux'): errors.append('tmux is missing. On a Homebrew Mac: brew install tmux')
+        if component == 'threads-bg':
+            help_out = run(['claude', '--help'])
+            if help_out.returncode or '--bg' not in help_out.stdout: errors.append('This Claude CLI has no --bg flag. Threads (claude --bg) needs a release with background sessions.')
         auth = run(['claude', 'auth', 'status'])
         try: logged = json.loads(auth.stdout).get('loggedIn') is True
         except ValueError: logged = False
@@ -48,14 +53,15 @@ def copy_bridge(root, home):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--component', choices=['both', 'computer-use', 'threads'], default='both')
+    ap.add_argument('--component', choices=['both', 'computer-use', 'threads', 'threads-bg'], default='both')
     ap.add_argument('--apply', action='store_true', help='Install after checks. Without this, read-only.')
     args = ap.parse_args(); home = Path.home()
     errors = check(home, args.component)
     print('Read-only prerequisite check' if not args.apply else 'Installation checks')
     for error in errors: print('NEEDS ATTENTION:', error)
     for cmd in commands(ROOT, home, args.component): print('Will run:', ' '.join(cmd))
-    print('Threads retains the filmed bypassPermissions default. Use only a trusted scratch project for the first test; /threads mode default changes it.')
+    if args.component == 'threads-bg': print('Threads (claude --bg) starts helpers in the permission mode of the lead chat by default; /threads mode changes it.')
+    else: print('Threads retains the filmed bypassPermissions default. Use only a trusted scratch project for the first test; /threads mode default changes it.')
     if errors: return 1
     if not args.apply:
         print('Prerequisite check passed. This is not a live app/session test. Re-run with --apply to install.'); return 0
@@ -66,7 +72,7 @@ def main():
         entries = json.loads(installed.stdout)
         if not isinstance(entries, list): raise ValueError()
     except ValueError: print('Unexpected plugin list format; stopped before writing.'); return 1
-    wanted = {'threads'} if args.component == 'threads' else {'codex-computer-use'} if args.component == 'computer-use' else {'threads','codex-computer-use'}
+    wanted = {'threads'} if args.component == 'threads' else {'threads-bg'} if args.component == 'threads-bg' else {'codex-computer-use'} if args.component == 'computer-use' else {'threads','codex-computer-use'}
     if any(str(e.get('id', e.get('name',''))).split('@')[0] in wanted for e in entries):
         print('A selected mod is already installed. Nothing changed. See docs/INSTALL.md.'); return 1
     if args.component in ('both','computer-use'):
