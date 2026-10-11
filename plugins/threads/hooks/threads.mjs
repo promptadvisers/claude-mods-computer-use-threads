@@ -223,6 +223,8 @@ export function register(on, options) {
 
   on("tool.call", { tool: "mcp__threads__threads_create" }, async ($, e) => {
     startTicker($);
+    const refused = await bypassRefused($, [e.permission_mode]);
+    if (refused) return { deny: refused };
     const made = await createThread($, {
       model: e.model,
       title: e.title,
@@ -350,6 +352,9 @@ export function register(on, options) {
 
   on("tool.call", { tool: "mcp__threads__threads_plan" }, async ($, e) => {
     startTicker($);
+    const phases = Array.isArray(e?.phases) ? e.phases : [];
+    const refused = await bypassRefused($, phases.map((ph) => ph?.permission_mode ?? ph?.permissionMode));
+    if (refused) return { deny: refused };
     const made = await createPlan($, e);
     if (made.error) return { deny: made.error };
     return { result: made.text };
@@ -866,7 +871,7 @@ async function registerTools($) {
         title: { type: "string", description: "Short title, e.g. \"Haiku scout\"; shown as \"Thread | <title>\"" },
         task: { type: "string", description: "The thread's task, written as a complete first prompt" },
         cwd: { type: "string", description: "Folder to work in (default: this chat's folder). Must be a trusted folder." },
-        permission_mode: { type: "string", enum: ["bypassPermissions", "default", "acceptEdits", "plan", "auto"], description: "Permission mode for a session thread (default bypassPermissions, or what /threads mode set). Inline threads use this chat's mode." },
+        permission_mode: { type: "string", enum: ["bypassPermissions", "default", "acceptEdits", "plan", "auto"], description: "Permission mode for a session thread (default bypassPermissions, or what /threads mode set). bypassPermissions is refused unless that default is already bypass. Inline threads use this chat's mode." },
         report_back: { type: "boolean", description: "Ask the thread to message a short report back to this chat (default true)" },
         effort: { type: "string", enum: ["low", "medium", "high", "xhigh", "max"], description: "Reasoning effort (default: the model's)" },
         worktree: { type: "boolean", description: "Run it in its own git worktree and branch (the folder must be in a git repo), so parallel threads never edit the same files. Use when the user asks for isolation, a worktree or a separate branch, or when several threads will edit the same repo at once" },
@@ -955,7 +960,7 @@ async function registerTools($) {
               effort: { type: "string", enum: ["low", "medium", "high", "xhigh", "max"] },
               task: { type: "string", description: "The phase's task, complete" },
               acceptance: { type: "string", description: "How to check the phase is done" },
-              permission_mode: { type: "string", enum: ["bypassPermissions", "default", "acceptEdits", "plan", "auto"], description: "Default bypassPermissions (or what /threads mode set)" },
+              permission_mode: { type: "string", enum: ["bypassPermissions", "default", "acceptEdits", "plan", "auto"], description: "Default bypassPermissions (or what /threads mode set); bypassPermissions is refused unless that default is already bypass" },
               gate: { type: "string", enum: ["auto", "lead", "user"], description: "Gate after this phase (default: the plan's)" },
             },
             required: ["name", "model", "task"],
@@ -2029,6 +2034,14 @@ async function setThreadModel($, t, rawModel) {
 async function defaultMode($) {
   const stored = checkMode(await $.store.get(MODE_KEY)).mode;
   return stored ?? configuredMode ?? DEFAULT_MODE;
+}
+
+// The model may not raise a thread to bypassPermissions on its own: only when the person's
+// default (/threads mode or the defaultPermissionMode setting) is already bypass.
+async function bypassRefused($, modes) {
+  if (!modes.some((m) => checkMode(m).mode === "bypassPermissions")) return "";
+  if ((await defaultMode($)) === "bypassPermissions") return "";
+  return "Refused: permission_mode bypassPermissions needs the person's opt-in. Leave permission_mode out to use their default, or ask them to run /threads mode bypassPermissions.";
 }
 
 async function setThreadEffort($, t, raw) {

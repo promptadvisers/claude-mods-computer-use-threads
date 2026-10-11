@@ -1808,6 +1808,19 @@ describe("threads: permission modes", () => {
     expect(registry(w).plans[0].phases[1].permissionMode).toBe("acceptEdits");
   });
 
+  test("the model cannot ask for bypassPermissions unless the person's default is bypass", async ($, on) => {
+    const w = fresh();
+    await boot($, on, w);
+    await threads($, "mode default");
+    const made: any = await $.tool.call({ tool: "mcp__threads__threads_create", model: "haiku", title: "x", task: "y", permission_mode: "bypassPermissions" } as any);
+    expect(made.deny).toMatch(/needs the person's opt-in/);
+    const plan: any = await $.tool.call({ tool: "mcp__threads__threads_plan", title: "P", gate: "auto", phases: [{ name: "A", model: "haiku", task: "x", permission_mode: "bypassPermissions" }] } as any);
+    expect(plan.deny).toMatch(/needs the person's opt-in/);
+    expect(spawns(w)).toHaveLength(0);
+    await threads($, "new haiku Mine --mode bypassPermissions -- x");
+    expect(spawns(w)[0][spawns(w)[0].indexOf("--permission-mode") + 1]).toBe("bypassPermissions");
+  });
+
   test("the bypass warning screen reads as needs-you with a clear label", () => {
     const screen = readScreen(["WARNING: Claude Code running in Bypass Permissions mode", "By proceeding, you accept all responsibility for actions taken while running in Bypass Permissions mode.", "❯ 1. No, exit", "  2. Yes, I accept"].join("\n"));
     expect(screen.bypassWarning).toBe(true);

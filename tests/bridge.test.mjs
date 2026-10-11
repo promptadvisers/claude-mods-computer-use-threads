@@ -52,3 +52,17 @@ test('standing approvals do not grant unrelated apps',async t=>{
  assert.equal((await call('/js',{session:'a',code:'app:TextEdit'})).text,'accept');
  assert.equal((await call('/js',{session:'a',code:'app:Calculator'})).text,'decline');
 });
+
+test('launch passes only a minimal environment to the Codex server', async (t) => {
+ const home=await mkdtemp(join(tmpdir(),'cu-home-'));t.after(()=>rm(home,{recursive:true,force:true}));
+ const v=join(home,'.codex/plugins/cache/openai-bundled/unified-computer-use/1.0.0');
+ await (await import('node:fs/promises')).mkdir(v,{recursive:true});
+ const dump='process.stdout.write(JSON.stringify(process.env))';
+ await writeFile(join(v,'.mcp.json'),JSON.stringify({mcpServers:{cua_repl:{command:process.execPath,args:['-e',dump],env:{CUA_FLAG:'1'}}}}));
+ const child=spawn(process.execPath,[new URL('../bridge/launch.mjs',import.meta.url).pathname],{env:{HOME:home,PATH:process.env.PATH,LC_ALL:'C',OPENAI_API_KEY:'sk-test',GH_TOKEN:'t'},stdio:['ignore','pipe','inherit']});
+ let out='';child.stdout.on('data',x=>out+=x);
+ await new Promise(r=>child.on('exit',r));
+ const env=JSON.parse(out);
+ assert.equal(env.HOME,home);assert.equal(env.LC_ALL,'C');assert.equal(env.CUA_FLAG,'1');
+ assert.equal(env.OPENAI_API_KEY,undefined);assert.equal(env.GH_TOKEN,undefined);
+});

@@ -12,6 +12,6 @@ Fresh bridge settings contain `apps: []` and `autoApproveAll: false`. Allow this
 
 Threads saves its registry and events in `~/.claude/threads/`, plan records in its `plans/` directory, and handoff notes in the working project. Claude also maintains its usual session logs. Do not commit these into a shared project.
 
-The filmed Threads configuration uses `bypassPermissions` for new sessions. It can run tools without stopping for normal permission prompts. Use a disposable project, or change to `/threads mode default` before creating helpers. Worktrees separate files but are not a security sandbox.
+The filmed Threads configuration uses `bypassPermissions` for new sessions. It can run tools without stopping for normal permission prompts. Use a disposable project, or change to `/threads mode default` before creating helpers. After that change, the model cannot ask for `bypassPermissions` on one helper; only you can, with `/threads new --mode bypassPermissions` or `/threads mode`. Worktrees separate files but are not a security sandbox.
 
 The package does not borrow credentials, modify the Claude desktop app's own files, or script typing into the Claude desktop window. The fallback steering mechanism types into the helper's own tmux terminal. Provider-enforced restrictions still apply.

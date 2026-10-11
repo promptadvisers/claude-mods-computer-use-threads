@@ -21,9 +21,12 @@ if (!versions.length) {
   process.exit(1);
 }
 const cfg = JSON.parse(readFileSync(join(root, versions.at(-1), '.mcp.json'), 'utf8')).mcpServers.cua_repl;
+// Pass only what a macOS process needs, not this session's whole environment (API keys, tokens).
+const KEEP = /^(HOME|PATH|USER|LOGNAME|SHELL|TMPDIR|LANG|LC_\w+|__CF_USER_TEXT_ENCODING|CODEX_HOME)$/;
+const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => KEEP.test(k)));
 const child = spawn(cfg.command, cfg.args || [], {
   stdio: 'inherit',
-  env: { ...process.env, ...(cfg.env || {}) },
+  env: { ...env, ...(cfg.env || {}) },
 });
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => child.kill(sig));
 child.on('exit', (code, sig) => process.exit(sig ? 1 : code ?? 0));

@@ -1,4 +1,5 @@
 import { test, expect } from 'claude-code/testing'
+import { typesUnread } from './hooks/register.tsx'
 import type { On } from 'claude-code'
 
 // Stands in for the engine beneath the mod: a store, a status line, a tool list
@@ -148,3 +149,29 @@ test('session end frees its Codex sessions; status lists who holds which app', a
   expect(calls.at(-1)).toEqual({ url: 'http://codex-cu/end', body: { session: 'sess-1' } })
 })
 
+
+test('a call that types before reading the state is refused; reading first, or not typing, passes', () => {
+  expect(typesUnread('await app.typeText("hi")')).toBe(true)
+  expect(typesUnread('await app.pressKey("cmd+n"); await app.getAXState()')).toBe(true)
+  expect(typesUnread('await app.getAXState({ emit: false }); await app.typeText("hi")')).toBe(false)
+  expect(typesUnread('let app = await cua.getApp("TextEdit"); await app.pressKey("cmd+n")')).toBe(false)
+  expect(typesUnread('await app.click(12); await app.getAXState()')).toBe(false)
+  expect(typesUnread(undefined)).toBe(false)
+})
+
+test('a shortcut can move focus, so typing after it needs a fresh read', () => {
+  const opened = 'let app = await cua.getApp("TextEdit"); await app.pressKey("cmd+n");'
+  expect(typesUnread(`${opened} await app.typeText("hi")`)).toBe(true)
+  expect(typesUnread(`${opened} await app.getAXState({ emit: false }); await app.typeText("hi")`)).toBe(false)
+  expect(typesUnread('await app.getAXState(); await app.typeText("hi"); await app.pressKey("Return"); await app.typeText("more")')).toBe(false)
+  expect(typesUnread('await tab.getAXState(); await tab.pressKey(4, "ctrl+a"); await tab.typeText(4, "x")')).toBe(true)
+})
+
+test('the raw Codex tool is denied when it types unread', async ($, on) => {
+  engine(on)
+  await $.session.start(start)
+  const blind = await $.tool.call({ tool: 'mcp__codex-cu__js', tool_use_id: 'd', code: 'await app.typeText("x")' })
+  expect(String(blind.deny)).toContain('types or presses keys before reading')
+  const looked = await $.tool.call({ tool: 'mcp__codex-cu__js', tool_use_id: 'e', code: 'await app.getAXState(); await app.typeText("x")' })
+  expect(looked.text).toBe('ran mcp__codex-cu__js')
+})
